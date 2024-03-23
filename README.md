@@ -1,6 +1,8 @@
 # RAG-LLaMA
 
-A clean and simple implementation of Retrieval Augmented Generation (RAG) to enhanced LLaMA chat model to answer questions based on Tesla user manuals. Open-source embedding and Cross-Encoders reranking models from Sentence Transformers are employed in this project.
+A clean and simple implementation of Retrieval Augmented Generation (RAG) to enhanced LLaMA chat model to answer questions from a private knowledge base. We use Tesla user manuals to build the knowledge base, and use open-source embedding and Cross-Encoders reranking models from Sentence Transformers in this project.
+
+This entire project runs locally, no third-party APIs are needed (with the exception of downloading open-source model weights from the HuggingFace Hub).
 
 # Disclaimer
 
@@ -31,9 +33,10 @@ A clean and simple implementation of Retrieval Augmented Generation (RAG) to enh
     - `build_embedding.py` extract text from Tesla manual (PDF) and compute embeddings (save to .pkl file).
     - `convert_meta_checkpoint.py` convert Meta's pre-trained LLaMA-2 weights to support our model in plain PyTorch code, so we can load it to start fine-tuning.
 
+- `play` directory contains notebooks to run tests.
   - `chat_with_rag.ipynb` run chat completion with LLaMA 2 chat model using RAG (with rerank).
-  - `naive_retrieval.ipynb` test naive retrieval.
-  - `retrieval_with_rerank.ipynb` test of retrieval with reranking.
+  - `naive_retriever.ipynb` test naive retrieval.
+  - `retriever_with_rerank.ipynb` test retrieval with reranking.
 
 # Project Setup
 
@@ -60,11 +63,20 @@ Use the following script to extract sections from the Tesla manual pdf and pre-c
 python3 -m rag_llama.scripts.build_embedding --pdf_dir "./data/docs" --save_to "./data/Tesla_manual_embeddings.pk"
 ```
 
-To test the retrieval systems and embeddings, open the `naive_retrieval.ipynb` or `retrieval_with_rerank.ipynb` to play with different retrieval systems.
+To test the retrieval systems and embeddings, open the `naive_retriever.ipynb` or `retriever_with_rerank.ipynb` to play with different retrieval systems.
 
 # Step 2 - Run LLaMA Chat Completion with RAG
 
-To play with LLaMA and RAG (with reranking), you can open the `chat_with_rag.ipynb`.
+Once the document embeddings and retrieval systems have been tested. We can start integrate these modules into LLM.
+
+Here's an overview of the steps involved when using RAG and LLM:
+
+- Compute embedding for the user query using the same embedding model
+- Looking for top K matches between user query embedding and the documents/sections embedding based on cosine similarity scores
+- Compute relativity scores using a reranking model for each pair of `user query + single item in the top K matches`, and the select top N matches based on the scores
+- Add selected top N documents/sections as part of user query and send to LLM
+
+To play with LLaMA and RAG, you can open the `chat_with_rag.ipynb`.
 
 # License
 

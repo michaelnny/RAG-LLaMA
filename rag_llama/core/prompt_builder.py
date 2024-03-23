@@ -64,7 +64,7 @@ def build_prompt_completion(dialog: Dialog, tokenizer: Tokenizer) -> Tuple[List[
 
     """
 
-    assert dialog is not None and len(dialog) >= 1
+    assert dialog is not None and isinstance(dialog, List) and len(dialog) >= 1
 
     dialog = maybe_add_system_prompt(dialog)
 

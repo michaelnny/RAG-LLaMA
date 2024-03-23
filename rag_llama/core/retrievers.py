@@ -12,7 +12,7 @@ from rag_llama.models.embedding import EmbeddingModel
 from rag_llama.models.reranking import RerankingModel
 
 
-class NaiveRetrievalSystem:
+class NaiveRetriever:
     'A naive mechanism to load pre-computed embedding in cache and perform cosine similarity lookup'
 
     def __init__(self, embed_file: str, device: str = 'cpu'):
@@ -67,7 +67,7 @@ class NaiveRetrievalSystem:
         return similar_items
 
 
-class RerankRetrievalSystem(NaiveRetrievalSystem):
+class RerankRetriever(NaiveRetriever):
     'A simple implementation of two stage retrieval system'
 
     def __init__(self, embed_file: str, device: str = 'cpu'):
@@ -77,7 +77,7 @@ class RerankRetrievalSystem(NaiveRetrievalSystem):
             device (str): pytorch runtime device for the model.
         """
 
-        NaiveRetrievalSystem.__init__(self, embed_file, device)
+        NaiveRetriever.__init__(self, embed_file, device)
 
         self.rerank_model = RerankingModel(device=self.device)
 
@@ -102,7 +102,7 @@ class RerankRetrievalSystem(NaiveRetrievalSystem):
         assert top_k > top_n, top_k
 
         # Stage 1 - naive retrieval based on cosine similarity scores
-        retrieved_items = NaiveRetrievalSystem.retrieve(self, query, top_k)
+        retrieved_items = NaiveRetriever.retrieve(self, query, top_k)
 
         # Stage 2 - compute rerank scores using another reranking model
         texts = [d['content'] for d in retrieved_items]

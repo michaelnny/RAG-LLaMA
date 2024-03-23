@@ -27,7 +27,7 @@ class RerankingModel:
         num_pairs = len(texts)
 
         # Tokenize sentences
-        features = self.tokenizer([query] * num_pairs, texts, padding=True, truncation=True, return_tensors='pt')
+        features = self.tokenizer([query] * num_pairs, texts, padding=True, truncation=True, return_tensors='pt').to(self.device)
 
         # Compute token embeddings
         scores = self.model(**features).logits

@@ -1,7 +1,5 @@
 torch>=2.1.0
 sentencepiece # tokenizer
 transformers==4.39.0 # load sentence transformer open-source model
-
 numpy
-
 PyMuPDF==1.23.26 # extract pdf
