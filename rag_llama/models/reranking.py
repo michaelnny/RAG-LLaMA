@@ -33,14 +33,7 @@ class RerankingModel:
         scores = self.model(**features).logits
 
         if normalize_score:
-            # Find Min and Max Scores
             min_score = torch.min(scores)
             max_score = torch.max(scores)
-
             scores = (scores - min_score) / (max_score - min_score)
-
-            # # Normalize to a between 0 and 1
-            # new_min, new_max = 0, 1
-            # scores = (scores - min_score) / (max_score - min_score) * (new_max - new_min) + new_min
-
         return scores

@@ -21,7 +21,7 @@ This entire project runs locally, no third-party APIs are needed (with the excep
 
 - `rag_llama` directory contains main source code for the project.
 
-  - `cores` directory contains core modules like generation, retrieval module etc.
+  - `cores` directory contains core modules like retrieval, generation, and text extractions.
   - `models` contains the LLaMA model class and open-source embedding model (from Sentence Transformers).
 
     - `embedding.py` open-source embeddings model from Sentence Transformers, loaded from HuggingFace Hub.
@@ -34,7 +34,7 @@ This entire project runs locally, no third-party APIs are needed (with the excep
     - `convert_meta_checkpoint.py` convert Meta's pre-trained LLaMA-2 weights to support our model in plain PyTorch code, so we can load it to start fine-tuning.
 
 - `play` directory contains notebooks to run tests.
-  - `chat_with_rag.ipynb` run chat completion with LLaMA 2 chat model using RAG (with rerank).
+  - `chatbot.ipynb` run Tesla customer support chatbot with LLaMA 2 chat model using RAG.
   - `naive_retriever.ipynb` test naive retrieval.
   - `retriever_with_rerank.ipynb` test retrieval with reranking.
 
@@ -76,7 +76,7 @@ Here's an overview of the steps involved when using RAG and LLM:
 - Compute relativity scores using a reranking model for each pair of `user query + single item in the top K matches`, and the select top N matches based on the scores
 - Add selected top N documents/sections as part of user query and send to LLM
 
-To play with LLaMA and RAG, you can open the `chat_with_rag.ipynb`.
+To play with LLaMA and RAG, you can open the `chatbot.ipynb`.
 
 # License
 

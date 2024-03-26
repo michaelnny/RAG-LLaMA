@@ -11,7 +11,7 @@ import pickle
 import time
 
 from rag_llama.models.embedding import EmbeddingModel
-from rag_llama.scripts.extract_pdf import extract_text_by_section_from_tesla_manual
+from rag_llama.core.extractions import extract_tesla_manual_sections
 
 
 def find_certain_files_under_dir(root_dir: str, file_type: str = '.txt') -> List[str]:
@@ -52,7 +52,7 @@ def main():
     extracted_sections = []
     for file in pdf_files:
         print(f'Extracting text from {file}, this may take a while...')
-        extracted_sections.extend(extract_text_by_section_from_tesla_manual(file, args.start_page, args.end_page))
+        extracted_sections.extend(extract_tesla_manual_sections(pdf_path=file, max_words=args.max_words, start_page=args.start_page, end_page=args.end_page))
 
     # compute embeddings in batches
     t1 = time.time()
@@ -67,7 +67,8 @@ def main():
     for start_idx in range(0, num_sections, batch_size):
         end_idx = min(start_idx + batch_size, num_sections)
         # add more metadata to the embedding
-        batch_data = [data['document'] + ' - ' + data['subject'] + ' - ' + data['section'] + ' - ' + data['content'] for data in extracted_sections[start_idx:end_idx]]
+
+        batch_data = [data['formatted_text'] for data in extracted_sections[start_idx:end_idx]]
         embeddings = embed_model.compute_embeddings(batch_data)
         # Assign embeddings back to each item
         for i, embedding in enumerate(embeddings.tolist()):
@@ -88,6 +89,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdf_dir', help='Source pdf files for Tesla user manual', type=str, required=True)
+    parser.add_argument('--max_words', help='Maximum number of words per chunk', type=int, default=380)
     parser.add_argument('--start_page', help='Starts from page in the PDF', type=int, default=8)
     parser.add_argument('--end_page', help='Ends at page in the PDF', type=int, default=None)
     parser.add_argument('--save_to', help='Save the embedding and text to .pk file', type=str, required=True)
