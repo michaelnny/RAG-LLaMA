@@ -35,7 +35,7 @@ This entire project runs locally, no third-party APIs are needed (with the excep
 
 - `play` directory contains notebooks to run tests.
   - `chatbot.ipynb` run Tesla customer support chatbot with LLaMA 2 chat model using RAG.
-  - `naive_retriever.ipynb` test naive retrieval.
+  - `standard_retriever.ipynb` test standard retrieval.
   - `retriever_with_rerank.ipynb` test retrieval with reranking.
 
 # Project Setup
@@ -63,7 +63,7 @@ Use the following script to extract sections from the Tesla manual pdf and pre-c
 python3 -m rag_llama.scripts.build_embedding --pdf_dir "./data/docs" --save_to "./data/Tesla_manual_embeddings.pk"
 ```
 
-To test the retrieval systems and embeddings, open the `naive_retriever.ipynb` or `retriever_with_rerank.ipynb` to play with different retrieval systems.
+To test the retrieval systems and embeddings, open the `standard_retriever.ipynb` or `retriever_with_rerank.ipynb` to play with different retrieval systems.
 
 # Step 2 - Run RAG-based Chat Completion LLaMA
 

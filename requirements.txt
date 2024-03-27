@@ -3,3 +3,4 @@ sentencepiece # tokenizer
 transformers==4.39.0 # load sentence transformer open-source model
 numpy
 PyMuPDF==1.23.26 # extract pdf
+rank-bm25==0.2.2 # BM25 keyword-based search

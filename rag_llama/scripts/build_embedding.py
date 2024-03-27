@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdf_dir', help='Source pdf files for Tesla user manual', type=str, required=True)
-    parser.add_argument('--max_words', help='Maximum number of words per chunk', type=int, default=380)
+    parser.add_argument('--max_words', help='Maximum number of words per chunk', type=int, default=300)
     parser.add_argument('--start_page', help='Starts from page in the PDF', type=int, default=8)
     parser.add_argument('--end_page', help='Ends at page in the PDF', type=int, default=None)
     parser.add_argument('--save_to', help='Save the embedding and text to .pk file', type=str, required=True)

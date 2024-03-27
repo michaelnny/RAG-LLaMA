@@ -46,7 +46,7 @@ def is_ends_with_whitespace(text: str) -> bool:
 
 
 def is_starts_with_punctuation(text: str) -> bool:
-    pattern = r'^[.,;:!?()]'
+    pattern = r'^[.,;:!?()®]'
     return bool(re.match(pattern, text))
 
 
@@ -61,19 +61,31 @@ def is_ends_with_special_characters(text: str) -> bool:
         return False
 
 
-def is_header_title(data: Mapping[Text, Any]) -> bool:
-    if 'size' in data and float(data['size']) == 18.0:  # find section from header title
+def is_valid_node(node: Mapping[Text, Any]) -> bool:
+    if 'size' not in node or 'flags' not in node or 'text' not in node:
+        return False
+    return True
+
+
+def is_page_title(node: Mapping[Text, Any]) -> bool:
+    if not is_valid_node(node):
+        return False
+    elif float(node['size']) == 18.0:  # page title
         return True
     return False
 
 
-def is_section_title(data: Mapping[Text, Any]) -> bool:
-    if 'size' in data and float(data['size']) == 12.0 or float(data['size']) == 14.0:
+def is_section_title(node: Mapping[Text, Any]) -> bool:
+    if not is_valid_node(node):
+        return False
+    elif float(node['size']) == 12.0 or float(node['size']) == 14.0:
+        return True
+    elif float(node['size']) >= 11.6 and node['flags'] == 5 and node['text'] == '®':  # special copyright symbol in title
         return True
     return False
 
 
-def merge_section_titles(objects: List[Section], window_size: int = 3) -> List[Section]:
+def merge_section_titles(objects: List[Section], window_size: int = 5) -> List[Section]:
     """Section title could be located in separate spans in case the title text is very long.
     We will try to do a look-ahead search and merge the titles.
     """
@@ -81,28 +93,34 @@ def merge_section_titles(objects: List[Section], window_size: int = 3) -> List[S
     results = []
     i = 0
     while i < len(objects):
-        current_obj = objects[i]
+        current_obj = copy.deepcopy(objects[i])
         # Check if the text of the current object matches is section title
         if is_section_title(current_obj):
             # Look ahead within the defined window to see if subsequent objects can be merged to the current section title
-            start_idx = i
+            start_idx = copy.copy(i)
             for j in range(1, window_size):
                 if j >= len(objects):
                     break
-                next_obj = objects[i + j]
 
-                curr_text = current_obj['text']
+                next_idx = start_idx + j
+                next_obj = objects[next_idx]
+
+                if not is_section_title(next_obj):
+                    break
+                elif next_obj['page'] != current_obj['page']:
+                    break
+
                 next_text = next_obj['text']
+                curr_text = current_obj['text']
 
-                if next_text != curr_text and is_section_title(next_obj):
-                    # handle white space
-                    if is_ends_with_whitespace(curr_text) or is_starts_with_whitespace(next_text) or is_starts_with_punctuation(next_text):
-                        curr_text += next_text
-                    else:
-                        curr_text += ' ' + next_text
-                    # Merge the text to current object
-                    current_obj['text'] = curr_text
-                    i = start_idx + j
+                # handle white space
+                if is_ends_with_whitespace(curr_text) or is_starts_with_whitespace(next_text) or is_starts_with_punctuation(next_text):
+                    curr_text += next_text
+                else:
+                    curr_text += ' ' + next_text
+                # Merge the text to current object
+                current_obj['text'] = curr_text
+                i = next_idx
 
             results.append(current_obj)
         else:
@@ -110,6 +128,10 @@ def merge_section_titles(objects: List[Section], window_size: int = 3) -> List[S
             results.append(current_obj)
 
         i += 1
+
+    # for item in results:
+    #     if 'APP_' in item['text'] or 'BMS_' in item['text'] or 'UMC_' in item['text']:
+    #         print(item['text'])
 
     return results
 
@@ -119,12 +141,8 @@ def get_formatted_section_text(data: Section) -> str:
     if data is None:
         return ''
 
-    # page information is not accurate, since text have been splitted into smaller chunks
-    # if data['start_page'] == data['end_page']:
-    #     page_ranges = data['start_page']
-    # else:
-    #     page_ranges = data['start_page'], data['end_page']
-    formatted_text = f"Document title: {data['document_title']}\nCar model: {data['car_model']}\nSoftware version: {data['software_version']}\nSubject: {data['subject']}\nSection: {data['section']}\nContent: {data['content']}"
+    # page information may not accurate, since text have been splitted into smaller chunks
+    formatted_text = f"Document: {data['document_title']}\nCar model: {data['car_model']}\nSubject: {data['subject']} - {data['section']}\nContent: {data['content']}\nPage: {data['page']}"
     return formatted_text
 
 
@@ -148,16 +166,6 @@ def split_sections_into_chunks(sections: List[Section], max_words: int) -> List[
         section_meta = get_section_metadata(section)
         if len(chunks) > 1:
             for i, chunk_text in enumerate(chunks):
-
-                if estimate_word_count(chunk_text) < 10:
-                    print('=' * 40)
-                    print(chunk_text)
-                    print('\n\n')
-                    print(section['content'])
-                    print('\n\n')
-                    print(section_meta)
-                    print('\n\n')
-
                 item = copy.deepcopy(section_meta)
                 item['section'] += f' - part {i+1}'
                 item['content'] = chunk_text
@@ -254,7 +262,7 @@ def extract_spans_and_page_titles_from_pdf(pdf_document: Any, start_page: int = 
                     curr_page = span['page']
 
                     # find page title, sometimes we don't have a section title in the content
-                    if is_header_title(span) and curr_page not in page_title_dict:
+                    if is_page_title(span) and curr_page not in page_title_dict:
                         page_title_dict[curr_page] = curr_text
                     elif not is_within_bounds(curr_bbox, content_bounds):
                         continue
@@ -277,7 +285,7 @@ def extract_sections_from_spans(spans: List[Any], page_title_dict: Any, metadata
         curr_text = span['text']
         curr_page = span['page']
 
-        if is_header_title(span) or is_section_title(span):
+        if is_page_title(span) or is_section_title(span):
             if curr_sec_content is not None:
                 # save previous section
                 extracted_sections.append(
@@ -286,8 +294,7 @@ def extract_sections_from_spans(spans: List[Any], page_title_dict: Any, metadata
                         'subject': page_title_dict[curr_page],
                         'section': curr_sec_label if curr_sec_label is not None else 'Overview',
                         'content': curr_sec_content,
-                        'start_page': curr_sec_start_page,
-                        'end_page': curr_page,
+                        'page': f'{curr_sec_start_page} - {curr_page}' if curr_page > curr_sec_start_page else f'{curr_page}',
                     }
                 )
                 curr_sec_content = None
@@ -358,7 +365,7 @@ if __name__ == '__main__':
 
     # Sample documents (replace with your PDF filename)
     pdf_filename = './data/docs/Tesla_ModelS_Owners_Manual_2021.pdf'
-    extracted_sections = extract_tesla_manual_sections(pdf_filename, 380, 8, 130)
+    extracted_sections = extract_tesla_manual_sections(pdf_filename, 380, 50, 999)
 
     # for section in extracted_sections:
     #     print(f"Document title: {section['document_title']}")
