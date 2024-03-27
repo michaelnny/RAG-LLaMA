@@ -8,8 +8,8 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
-class RerankingModel:
-    'A wrapper around the sentence-transformers open source Cross-Encoders'
+class RankingModel:
+    'A wrapper around the sentence-transformers open-source Cross-Encoders ranking model'
 
     def __init__(self, model_name: str = 'ms-marco-MiniLM-L-6-v2', device: str = 'cpu'):
         assert model_name is not None, model_name

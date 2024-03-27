@@ -1,12 +1,12 @@
 # RAG-LLaMA
 
-A clean and simple implementation of Retrieval Augmented Generation (RAG) to enhanced LLaMA chat model to answer questions from a private knowledge base. We use Tesla user manuals to build the knowledge base, and use open-source embedding and Cross-Encoders reranking models from Sentence Transformers in this project.
+A clean and simple implementation of Retrieval Augmented Generation (RAG) to enhanced LLaMA chat model to answer questions from a private knowledge base. We use Tesla user manuals to build the knowledge base, and use open-source embedding and Cross-Encoders ranking models from Sentence Transformers in this project.
 
 This entire project runs locally, no third-party APIs are needed (with the exception of downloading open-source model weights from the HuggingFace Hub).
 
 # Disclaimer
 
-**Project Purpose:** This project is for research and education only, focusing on the study of individual algorithms rather than the creation of a standard library. If you're looking for a ready-to-use library for production applications, this project may not be suitable for your needs.
+**Project Purpose:** This is a toy project for research and education only, focusing on the study of individual algorithms rather than the creation of a standard library. If you're looking for a ready-to-use library for production applications, this project may not be suitable for your needs.
 
 **Bug Reporting and Contributions:** We run some testing upon working on the project, but we cannot guarantee it's bug-free. Bug reports and pull requests are highly encouraged and welcomed.
 
@@ -25,7 +25,7 @@ This entire project runs locally, no third-party APIs are needed (with the excep
   - `models` contains the LLaMA model class and open-source embedding model (from Sentence Transformers).
 
     - `embedding.py` open-source embeddings model from Sentence Transformers, loaded from HuggingFace Hub.
-    - `reranking.py` open-source Cross-Encoders model from Sentence Transformers, loaded from HuggingFace Hub.
+    - `ranking.py` open-source Cross-Encoders ranking model from Sentence Transformers, loaded from HuggingFace Hub.
     - `model.py` LLaMA 2 model.
 
   - `scripts` directory contains all source code for convert the model weights and build embedding for documents.
@@ -65,18 +65,31 @@ python3 -m rag_llama.scripts.build_embedding --pdf_dir "./data/docs" --save_to "
 
 To test the retrieval systems and embeddings, open the `naive_retriever.ipynb` or `retriever_with_rerank.ipynb` to play with different retrieval systems.
 
-# Step 2 - Run LLaMA Chat Completion with RAG
+# Step 2 - Run RAG-based Chat Completion LLaMA
 
 Once the document embeddings and retrieval systems have been tested. We can start integrate these modules into LLM.
 
-Here's an overview of the steps involved when using RAG and LLM:
+Here's an overview of the steps involved when using RAG with reranking:
 
 - Compute embedding for the user query using the same embedding model
 - Looking for top K matches between user query embedding and the documents/sections embedding based on cosine similarity scores
-- Compute relativity scores using a reranking model for each pair of `user query + single item in the top K matches`, and the select top N matches based on the scores
+- Compute relativity scores using a ranking model for each pair of `user query + single item in the top K matches`, and the select top N matches based on the scores
 - Add selected top N documents/sections as part of user query and send to LLM
 
-To play with LLaMA and RAG, you can open the `chatbot.ipynb`.
+Here's an overview of the steps involved when using RAG with HyDE and reranking:
+
+- Ask LLM to generate a passage based on the user
+- Compute embedding for the passage from LLM using the same embedding model
+- Looking for top K matches between passage embedding and the documents/sections embedding based on cosine similarity scores
+- Compute relativity scores using a ranking model for each pair of `passage + single item in the top K matches`, and the select top N matches based on the scores
+- Add selected top N documents/sections as part of user query and send to LLM
+
+To play with RAG-based chatbot for Tesla customer support assistant, you can open the `chatbot.ipynb`.
+
+**Note on the Chatbot:**
+
+- This is a toy project and the performance of the chatbot might not be great.
+- It requires at least 16GB of GPU VRAM if you want to run it on GPU.
 
 # License
 

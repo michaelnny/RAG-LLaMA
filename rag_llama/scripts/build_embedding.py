@@ -11,7 +11,7 @@ import pickle
 import time
 
 from rag_llama.models.embedding import EmbeddingModel
-from rag_llama.core.extractions import extract_tesla_manual_sections
+from rag_llama.core.extractions.tesla_manual import extract_tesla_manual_sections
 
 
 def find_certain_files_under_dir(root_dir: str, file_type: str = '.txt') -> List[str]:

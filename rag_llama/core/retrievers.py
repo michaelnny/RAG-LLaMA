@@ -9,7 +9,7 @@ import torch
 
 
 from rag_llama.models.embedding import EmbeddingModel
-from rag_llama.models.reranking import RerankingModel
+from rag_llama.models.ranking import RankingModel
 
 
 class NaiveRetriever:
@@ -79,9 +79,9 @@ class RerankRetriever(NaiveRetriever):
 
         NaiveRetriever.__init__(self, embed_file, device)
 
-        self.rerank_model = RerankingModel(device=self.device)
+        self.rerank_model = RankingModel(device=self.device)
 
-    def retrieve(self, query: str, top_k: int = 25, top_n: int = 5, normalize_score: bool = False) -> List[Mapping[Text, Any]]:
+    def retrieve(self, query: str, top_k: int = 50, top_n: int = 5, normalize_score: bool = False) -> List[Mapping[Text, Any]]:
         """
         Do two staged retrieve:
             1. Retrieve top K items from the cache based on the cosine similarity scores
