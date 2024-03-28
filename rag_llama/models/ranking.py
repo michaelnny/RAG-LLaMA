@@ -20,7 +20,7 @@ class RankingModel:
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name).to(self.device).eval()
 
     @torch.no_grad()
-    def compute_rerank_scores(self, query: str, texts: List[str], normalize_score: bool = True) -> torch.Tensor:
+    def compute_rank_scores(self, query: str, texts: List[str], normalize_score: bool = True) -> torch.Tensor:
         assert query is not None and len(query) > 0, query
         assert len(texts) > 0 and all([t is not None and len(t) > 0 for t in texts]), texts
 
