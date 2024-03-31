@@ -1,12 +1,3 @@
-# Files too big
-*.tar
-*.zst
-datasets/*
-
-
-# Checkpoints
-checkpoints/*
-
 # logs
 __pycache__/
 *.py[cod]

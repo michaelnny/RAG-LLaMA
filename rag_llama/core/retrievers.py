@@ -54,20 +54,22 @@ class StandardRetriever:
     """A naive mechanism to load pre-computed embedding in cache and perform cosine similarity lookup,
     with the option to use BM25 keyword-based search too."""
 
-    def __init__(self, embed_file: str, device: str = 'cpu'):
+    def __init__(self, knowledge_embed: str, device: str = 'cpu', model_ckpt_dir: str = None, tokenizer_ckpt_dir: str = None):
         """
         Arguments:
-            embed_file (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
-            device (str): pytorch runtime device for the model.
+            knowledge_embed (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
+            device (str): pytorch runtime device for the embedding model.
+            model_ckpt_dir (str): fine-tuned model checkpoint dir, default None.
+            tokenizer_ckpt_dir (str): tokenizer checkpoint dir with possible custom tokens, default None.
         """
-        assert os.path.exists(embed_file) and embed_file.endswith('.pk')
+        assert os.path.exists(knowledge_embed) and knowledge_embed.endswith('.pk')
 
         self.device = device
-        self.samples = pickle.load(open(embed_file, 'rb'))
+        self.samples = pickle.load(open(knowledge_embed, 'rb'))
 
         assert all(['embed' in d and 'formatted_text' in d for d in self.samples])
         self.embed_matrix = torch.stack([torch.tensor(d['embed']) for d in self.samples]).to(self.device)
-        self.embed_model = EmbeddingModel(device=self.device)
+        self.embed_model = EmbeddingModel(device=self.device, model_ckpt_dir=model_ckpt_dir, tokenizer_ckpt_dir=tokenizer_ckpt_dir)
 
     def retrieve(self, query: str, top_k: int = 5, normalized_embed: bool = True) -> List[Mapping[Text, Any]]:
         """Retrieve top K items from the cache based on the cosine similarity scores.
@@ -108,14 +110,16 @@ class StandardRetriever:
 class RerankRetriever(StandardRetriever):
     'A simple implementation of two stage retrieval system'
 
-    def __init__(self, embed_file: str, device: str = 'cpu'):
+    def __init__(self, knowledge_embed: str, device: str = 'cpu', model_ckpt_dir: str = None, tokenizer_ckpt_dir: str = None):
         """
         Arguments:
-            embed_file (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
-            device (str): pytorch runtime device for the model.
+            knowledge_embed (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
+            device (str): pytorch runtime device for the embedding model.
+            model_ckpt_dir (str): fine-tuned model checkpoint dir, default None.
+            tokenizer_ckpt_dir (str): tokenizer checkpoint dir with possible custom tokens, default None.
         """
 
-        StandardRetriever.__init__(self, embed_file, device)
+        StandardRetriever.__init__(self, knowledge_embed, device, model_ckpt_dir, tokenizer_ckpt_dir)
         self.rank_model = RankingModel(device=self.device)
 
     def retrieve(self, query: str, top_k: int = 50, top_n: int = 5, normalize_score: bool = True) -> List[Mapping[Text, Any]]:
@@ -164,13 +168,15 @@ class HybridRetriever(StandardRetriever):
     """A naive mechanism to use hybrid solution for retrieval,
     where we combine embedding-based and BM25 keyword-based rankings by using reciprocal rank fusion (RRF)."""
 
-    def __init__(self, embed_file: str, device: str = 'cpu'):
+    def __init__(self, knowledge_embed: str, device: str = 'cpu', model_ckpt_dir: str = None, tokenizer_ckpt_dir: str = None):
         """
         Arguments:
-            embed_file (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
-            device (str): pytorch runtime device for the model.
+            knowledge_embed (str): the `.pk` file contains pre-computed embedding as well as original text and other metadata.
+            device (str): pytorch runtime device for the embedding model.
+            model_ckpt_dir (str): fine-tuned model checkpoint dir, default None.
+            tokenizer_ckpt_dir (str): tokenizer checkpoint dir with possible custom tokens, default None.
         """
-        StandardRetriever.__init__(self, embed_file, device)
+        StandardRetriever.__init__(self, knowledge_embed, device, model_ckpt_dir, tokenizer_ckpt_dir)
 
         assert all(['formatted_text' in d for d in self.samples])
 
